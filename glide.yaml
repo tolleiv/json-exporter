@@ -1,0 +1,9 @@
+package: github.com/tolleiv/json-exporter
+import:
+- package: github.com/prometheus/client_golang
+  subpackages:
+  - prometheus/promhttp
+- package: github.com/oliveagle/jsonpath
+- package: github.com/mohae/utilitybelt
+  subpackages:
+  - deepcopy
