@@ -3,6 +3,11 @@
 This Prometheus exporter operates similar to the Blackbox exporters. It downloads a JSON file and provides a numerical gauge value from within that file.
 Which value to pick is defined through JsonPath.
 
+## Parameters
+
+ - `target`: URL / Json-file to download
+ - `jsonpath`: the field name to read the value from, this follows the syntax provided by [oliveagle/jsonpath](https://github.com/oliveagle/jsonpath)
+
 ## Docker usage
 
     docker build -t json_exporter .
@@ -34,4 +39,12 @@ scrape_configs:
         target_label: instance
       - target_label: __address__
         replacement: 127.0.0.1:9116  # Json exporter.
+    metric_relabel_configs:
+      - source_labels: value
+        target_label: parse_time
+
 ```
+
+## License
+
+MIT License
