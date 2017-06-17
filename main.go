@@ -7,7 +7,6 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/client_golang/prometheus"
-	"time"
 	"crypto/tls"
 	"github.com/oliveagle/jsonpath"
 	"io/ioutil"
