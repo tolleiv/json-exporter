@@ -17,12 +17,6 @@ import (
 var addr = flag.String("listen-address", ":9116", "The address to listen on for HTTP requests.")
 
 func main() {
-
-	go func() {
-		for {
-			time.Sleep(5 * time.Second)
-		}
-	}()
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`<html>
             <head><title>Json Exporter</title></head>
