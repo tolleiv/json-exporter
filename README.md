@@ -1,4 +1,6 @@
 # Json Exporter
+![TravisCI build status](https://travis-ci.org/tolleiv/json-exporter.svg?branch=master)
+[![Docker Build Statu](https://img.shields.io/docker/build/tolleiv/json-exporter.svg)](https://hub.docker.com/r/tolleiv/json-exporter/)
 
 This Prometheus exporter operates similar to the Blackbox exporters. It downloads a JSON file and provides a numerical gauge value from within that file.
 Which value to pick is defined through JsonPath.
