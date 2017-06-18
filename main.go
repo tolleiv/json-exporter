@@ -76,7 +76,7 @@ func probeHandler(w http.ResponseWriter, r *http.Request) {
 		defer resp.Body.Close()
 		bytes, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			http.Error(w, "Jsonpath not found", 400)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -84,13 +84,13 @@ func probeHandler(w http.ResponseWriter, r *http.Request) {
 		json.Unmarshal([]byte(bytes), &json_data)
 		res, err := jsonpath.JsonPathLookup(json_data, lookuppath)
 		if err != nil {
-			http.Error(w, "Jsonpath not found", 400)
+			http.Error(w, "Jsonpath not found", http.StatusNotFound)
 			return
 		}
 		log.Printf("Found value %v", res)
 		number, ok := res.(float64)
 		if !ok {
-			http.Error(w, "Values could not be parsed to Float64", 400)
+			http.Error(w, "Values could not be parsed to Float64", http.StatusInternalServerError)
 			return
 		}
 		probeSuccessGauge.Set(1)

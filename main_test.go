@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/url"
 	"io/ioutil"
+	"strings"
 )
 
 var probeTests = []struct {
@@ -16,10 +17,11 @@ var probeTests = []struct {
 	out_value     string
 }{
 	{"{\"field\": 23}", "$.field", 200, "value 23"},
-	{"{\"field\": 19}", "$.field", 200, "value 19 "},
+	{"{\"field\": 19}", "$.field", 200, "value 19"},
+	{"{\"field\": 19}", "$.undefined", 404, "Jsonpath not found"},
 }
 
-func TestHTTP(t *testing.T) {
+func TestProbeHandler(t *testing.T) {
 
 	for _, tt := range probeTests {
 
@@ -39,11 +41,11 @@ func TestHTTP(t *testing.T) {
 		body, _ := ioutil.ReadAll(resp.Body)
 
 		if tt.out_http_code != resp.StatusCode {
-			t.Error("HTTP Code mismatch")
+			t.Error(fmt.Sprintf("HTTP Code mismatch - %d expected %d", resp.StatusCode, tt.out_http_code))
 		}
 
-		//		fmt.Println(resp.StatusCode)
-		//		fmt.Println(resp.Header.Get("Content-Type"))
-		fmt.Println(string(body))
+		if ! strings.Contains(string(body), tt.out_value) {
+			t.Error(fmt.Sprintf("Expected output: %s got\n%s", tt.out_value, string(body)))
+		}
 	}
 }
