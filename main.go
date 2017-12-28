@@ -5,12 +5,12 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/prometheus/client_golang/prometheus"
 	"crypto/tls"
-	"github.com/oliveagle/jsonpath"
-	"io/ioutil"
 	"encoding/json"
+	"github.com/oliveagle/jsonpath"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"io/ioutil"
 )
 
 var addr = flag.String("listen-address", ":9116", "The address to listen on for HTTP requests.")
@@ -55,8 +55,8 @@ func probeHandler(w http.ResponseWriter, r *http.Request) {
 	})
 	valueGauge := prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name:	"value",
-			Help:	"Retrieved value",
+			Name: "value",
+			Help: "Retrieved value",
 		},
 	)
 	registry := prometheus.NewRegistry()
@@ -88,13 +88,20 @@ func probeHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		log.Printf("Found value %v", res)
-		number, ok := res.(float64)
-		if !ok {
+		if number, ok := res.(float64); ok {
+			probeSuccessGauge.Set(1)
+			valueGauge.Set(number)
+		} else if boolean, ok := res.(bool); ok {
+			probeSuccessGauge.Set(1)
+			if boolean {
+				valueGauge.Set(1)
+			} else {
+				valueGauge.Set(0)
+			}
+		} else {
 			http.Error(w, "Values could not be parsed to Float64", http.StatusInternalServerError)
 			return
 		}
-		probeSuccessGauge.Set(1)
-		valueGauge.Set(number)
 	}
 
 	h := promhttp.HandlerFor(registry, promhttp.HandlerOpts{})
