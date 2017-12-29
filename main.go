@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"reflect"
+	"strconv"
 
 	"crypto/tls"
 	"encoding/json"
@@ -103,6 +104,14 @@ func probeHandler(w http.ResponseWriter, r *http.Request) {
 			} else {
 				valueGauge.Set(0)
 			}
+		} else if str, ok := res.(string); ok {
+			number, err = strconv.ParseFloat(str, 64)
+			if err != nil {
+				http.Error(w, "values is string but cannot be converted to Float64", http.StatusInternalServerError)
+				log.Printf("%v(%v) could not be parsed to Float64", res, reflect.TypeOf(res))
+			}
+			probeSuccessGauge.Set(1)
+			valueGauge.Set(number)
 		} else {
 			http.Error(w, "Values could not be parsed to Float64", http.StatusInternalServerError)
 			log.Printf("%v(%v) could not be parsed to Float64", res, reflect.TypeOf(res))
