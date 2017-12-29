@@ -71,6 +71,7 @@ func probeHandler(w http.ResponseWriter, r *http.Request) {
 	resp, err := client.Get(target)
 	if err != nil {
 		http.Error(w, "Target is irresponsible", http.StatusInternalServerError)
+		return
 	} else {
 		defer resp.Body.Close()
 		bytes, err := ioutil.ReadAll(resp.Body)
