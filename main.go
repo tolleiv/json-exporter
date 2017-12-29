@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"reflect"
 
 	"crypto/tls"
 	"encoding/json"
@@ -71,6 +72,7 @@ func probeHandler(w http.ResponseWriter, r *http.Request) {
 	resp, err := client.Get(target)
 	if err != nil {
 		http.Error(w, "Target is irresponsible", http.StatusInternalServerError)
+		log.Printf("Access to %v failed: %v", target, err)
 		return
 	} else {
 		defer resp.Body.Close()
@@ -85,6 +87,7 @@ func probeHandler(w http.ResponseWriter, r *http.Request) {
 		res, err := jsonpath.JsonPathLookup(json_data, lookuppath)
 		if err != nil {
 			http.Error(w, "Jsonpath not found", http.StatusNotFound)
+			log.Printf("Jsonpath(%v) not found: %v", lookuppath, json_data)
 			return
 		}
 		log.Printf("Found value %v", res)
@@ -100,6 +103,7 @@ func probeHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		} else {
 			http.Error(w, "Values could not be parsed to Float64", http.StatusInternalServerError)
+			log.Printf("%v(%v) could not be parsed to Float64", res, reflect.TypeOf(res))
 			return
 		}
 	}
