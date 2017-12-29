@@ -43,7 +43,7 @@ func probeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	lookuppath := params.Get("jsonpath")
-	if target == "" {
+	if lookuppath == "" {
 		http.Error(w, "The JsonPath to lookup", 400)
 		return
 	}
