@@ -70,12 +70,14 @@ func probeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	client := &http.Client{Transport: tr}
 	resp, err := client.Get(target)
+	if resp.Body != nil {
+		defer resp.Body.Close()
+	}
 	if err != nil {
 		http.Error(w, "Target is irresponsible", http.StatusInternalServerError)
 		log.Printf("Access to %v failed: %v", target, err)
 		return
 	} else {
-		defer resp.Body.Close()
 		bytes, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
