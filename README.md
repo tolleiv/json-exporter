@@ -9,6 +9,7 @@ Which value to pick is defined through JsonPath.
 
  - `target`: URL / Json-file to download
  - `jsonpath`: the field name to read the value from, this follows the syntax provided by [oliveagle/jsonpath](https://github.com/oliveagle/jsonpath)
+ - `multiple`(optional): the factor to be used to multiple with the parsed value before return. (NOTE: ignored when the value is boolean)
 
 ## Docker usage
 

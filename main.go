@@ -47,6 +47,11 @@ func probeHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "The JsonPath to lookup", 400)
 		return
 	}
+	multipleStr := params.Get("multiple")
+	multiple, err := strconv.ParseFloat(multipleStr, 64)
+	if err != nil {
+		multiple = 1
+	}
 	probeSuccessGauge := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "probe_success",
 		Help: "Displays whether or not the probe was a success",
@@ -96,7 +101,7 @@ func probeHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Found value %v", res)
 		if number, ok := res.(float64); ok {
 			probeSuccessGauge.Set(1)
-			valueGauge.Set(number)
+			valueGauge.Set(number * multiple)
 		} else if boolean, ok := res.(bool); ok {
 			probeSuccessGauge.Set(1)
 			if boolean {
@@ -111,7 +116,7 @@ func probeHandler(w http.ResponseWriter, r *http.Request) {
 				log.Printf("%v(%v) could not be parsed to Float64", res, reflect.TypeOf(res))
 			}
 			probeSuccessGauge.Set(1)
-			valueGauge.Set(number)
+			valueGauge.Set(number * multiple)
 		} else {
 			http.Error(w, "Values could not be parsed to Float64", http.StatusInternalServerError)
 			log.Printf("%v(%v) could not be parsed to Float64", res, reflect.TypeOf(res))
