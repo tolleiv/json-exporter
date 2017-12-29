@@ -70,7 +70,7 @@ func probeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	client := &http.Client{Transport: tr}
 	resp, err := client.Get(target)
-	if resp.Body != nil {
+	if resp != nil && resp.Body != nil {
 		defer resp.Body.Close()
 	}
 	if err != nil {
