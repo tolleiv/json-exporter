@@ -72,7 +72,8 @@ func probeHandler(w http.ResponseWriter, r *http.Request) {
 	registry.MustRegister(valueGauge)
 
 	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig:   &tls.Config{InsecureSkipVerify: true},
+		DisableKeepAlives: true,
 	}
 	client := &http.Client{Transport: tr}
 	resp, err := client.Get(target)
