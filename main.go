@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"crypto/tls"
 	"encoding/json"
@@ -52,7 +53,12 @@ func probeHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		multiple = 1
 	}
-	labelKeys := params["label"]
+	labelPaths := params["label"]
+	var labelKeys []string
+	for _, labelPath := range labelPaths {
+		labelParts := strings.Split(labelPath, ".")
+		labelKeys = append(labelKeys, labelParts[len(labelParts)-1])
+	}
 	probeSuccessGauge := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "probe_success",
 		Help: "Displays whether or not the probe was a success",
@@ -98,8 +104,9 @@ func probeHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Parse labels
 		var labels prometheus.Labels
-		for _, labelKey := range labelKeys {
-			res, err := jsonpath.JsonPathLookup(json_data, labelKey)
+		for idx, labelPath := range labelPaths {
+			labelKey := labelKeys[idx]
+			res, err := jsonpath.JsonPathLookup(json_data, labelPath)
 			if err != nil {
 				http.Error(w, "Jsonpath for label not found", http.StatusNotFound)
 				log.Printf("Jsonpath for label(%v) not found: %v", labelKey, json_data)
