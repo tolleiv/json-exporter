@@ -52,6 +52,7 @@ func probeHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		multiple = 1
 	}
+	labelKeys := params["label"]
 	probeSuccessGauge := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "probe_success",
 		Help: "Displays whether or not the probe was a success",
@@ -60,16 +61,17 @@ func probeHandler(w http.ResponseWriter, r *http.Request) {
 		Name: "probe_duration_seconds",
 		Help: "Returns how long the probe took to complete in seconds",
 	})
-	valueGauge := prometheus.NewGauge(
+	valueGaugeVec := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "value",
 			Help: "Retrieved value",
 		},
+		labelKeys,
 	)
 	registry := prometheus.NewRegistry()
 	registry.MustRegister(probeSuccessGauge)
 	registry.MustRegister(probeDurationGauge)
-	registry.MustRegister(valueGauge)
+	registry.MustRegister(valueGaugeVec)
 
 	tr := &http.Transport{
 		TLSClientConfig:   &tls.Config{InsecureSkipVerify: true},
@@ -93,6 +95,35 @@ func probeHandler(w http.ResponseWriter, r *http.Request) {
 
 		var json_data interface{}
 		json.Unmarshal([]byte(bytes), &json_data)
+
+		// Parse labels
+		var labels prometheus.Labels
+		for _, labelKey := range labelKeys {
+			res, err := jsonpath.JsonPathLookup(json_data, labelKey)
+			if err != nil {
+				http.Error(w, "Jsonpath for label not found", http.StatusNotFound)
+				log.Printf("Jsonpath for label(%v) not found: %v", labelKey, json_data)
+				return
+			}
+			if str, ok := res.(string); ok {
+				labels[labelKey] = str
+			} else if number, ok := res.(float64); ok {
+				labels[labelKey] = strconv.FormatFloat(number, 'f', -1, 64)
+			} else if boolean, ok := res.(bool); ok {
+				if boolean {
+					labels[labelKey] = "true"
+				} else {
+					labels[labelKey] = "false"
+				}
+			} else {
+				http.Error(w, "Failed to parse label", http.StatusInternalServerError)
+				log.Printf("Failed to parse label: %v(%v)", res, reflect.TypeOf(res))
+				return
+			}
+		}
+		valueGauge := valueGaugeVec.With(labels)
+
+		// Parse value
 		res, err := jsonpath.JsonPathLookup(json_data, lookuppath)
 		if err != nil {
 			http.Error(w, "Jsonpath not found", http.StatusNotFound)
