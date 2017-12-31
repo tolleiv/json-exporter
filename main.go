@@ -156,6 +156,9 @@ func probeHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			probeSuccessGauge.Set(1)
 			valueGauge.Set(number * multiple)
+		} else if slice, ok := res.([]interface{}); ok {
+			probeSuccessGauge.Set(1)
+			valueGauge.Set(float64(len(slice)))
 		} else {
 			http.Error(w, "Values could not be parsed to Float64", http.StatusInternalServerError)
 			log.Printf("%v(%v) could not be parsed to Float64", res, reflect.TypeOf(res))
