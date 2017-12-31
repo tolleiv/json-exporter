@@ -130,7 +130,7 @@ func probeHandler(w http.ResponseWriter, r *http.Request) {
 			log.Printf("Jsonpath(%v) not found: %v", lookuppath, json_data)
 			return
 		}
-		log.Printf("Found value %v", res)
+		//log.Printf("Found value %v", res)
 		if number, ok := res.(float64); ok {
 			probeSuccessGauge.Set(1)
 			valueGauge.Set(number * multiple)
