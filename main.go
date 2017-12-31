@@ -103,7 +103,7 @@ func probeHandler(w http.ResponseWriter, r *http.Request) {
 		json.Unmarshal([]byte(bytes), &json_data)
 
 		// Parse labels
-		var labels prometheus.Labels
+		labels := make(prometheus.Labels)
 		for idx, labelPath := range labelPaths {
 			labelKey := labelKeys[idx]
 			res, err := jsonpath.JsonPathLookup(json_data, labelPath)
