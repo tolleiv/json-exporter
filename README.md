@@ -3,12 +3,13 @@
 [![Docker Build Statu](https://img.shields.io/docker/build/tolleiv/json-exporter.svg)](https://hub.docker.com/r/tolleiv/json-exporter/)
 
 This Prometheus exporter operates similar to the Blackbox exporters. It downloads a JSON file and provides a numerical gauge value from within that file.
-Which value to pick is defined through JsonPath.
+Which values to pick is defined through jsonpath.[METRIC_NAME_M]=[JSON PATH_N].
 
 ## Parameters
 
  - `target`: URL / Json-file to download
- - `jsonpath`: the field name to read the value from, this follows the syntax provided by [oliveagle/jsonpath](https://github.com/oliveagle/jsonpath)
+ - `jsonpath.[METRIC_NAME_1]=[JSON PATH_1]`: the field name to read the value from, this follows the syntax provided by [oliveagle/jsonpath](https://github.com/oliveagle/jsonpath)
+ - `jsonpath.[METRIC_NAME_N]=[JSON PATH_N]`: the field name to read the value from, this follows the syntax provided by [oliveagle/jsonpath](https://github.com/oliveagle/jsonpath)
 
 ## Docker usage
 
@@ -17,7 +18,7 @@ Which value to pick is defined through JsonPath.
    
 The related metrics can then be found under:
    
-    http://localhost:9116/probe?target=http://validate.jsontest.com/?json=%7B%22key%22:%22value%22%7D&jsonpath=$.parse_time_nanoseconds
+    http://localhost:9116/probe?target=http://validate.jsontest.com/?json=%7B%22key%22:%22value%22%7D&jsonpath.nanoseconds=$.parse_time_nanoseconds&jsonpath.size=$.size
 
 ## Prometheus Configuration
 
@@ -30,7 +31,8 @@ scrape_configs:
   - job_name: 'json'
     metrics_path: /probe
     params:
-      jsonpath: [$.parse_time_nanoseconds] # Look for the nanoseconds field
+      - jsonpath.nanoseconds: [$.parse_time_nanoseconds] # Look for the nanoseconds field
+      - jsonpath.size: [$.size]
     static_configs:
       - targets:
         - http://validate.jsontest.com/?json=%7B%22key%22:%22value%22%7D
@@ -41,9 +43,6 @@ scrape_configs:
         target_label: instance
       - target_label: __address__
         replacement: 127.0.0.1:9116  # Json exporter.
-    metric_relabel_configs:
-      - source_labels: value
-        target_label: parse_time
 
 ```
 
