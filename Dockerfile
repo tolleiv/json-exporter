@@ -1,14 +1,15 @@
-FROM golang:1.8
+FROM golang
 
-WORKDIR /go/src/app
+WORKDIR /workspace
+
 COPY . .
-RUN go-wrapper download
-RUN go-wrapper install
-EXPOSE 9116
-CMD ["go-wrapper", "run"] # ["app"]
 
-# Once 17.05 has arrived
-#FROM alpine:latest  
-#RUN apk --no-cache add ca-certificates
-#WORKDIR /root/
-#COPY --from= as builder /go/app .
+RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o /json_exporter
+RUN echo "nobody:x:65534:65534:Nobody:/:" > /etc_passwd
+
+FROM scratch
+
+COPY --from=0 /json_exporter /json_exporter
+COPY --from=0 /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=0 /etc_passwd /etc/passwd
+USER nobody
