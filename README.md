@@ -13,7 +13,7 @@ Which value to pick is defined through JsonPath.
 ## Docker usage
 
     docker build -t json_exporter .
-    docker -d -p 9116:9116 --name json_exporter json_exporter
+    docker run -p 9116:9116 -d json_exporter /json_exporter
    
 The related metrics can then be found under:
    
