@@ -14,6 +14,10 @@ Which value to pick is defined through JsonPath.
 
     docker build -t json_exporter .
     docker run -p 9116:9116 -d json_exporter /json_exporter
+
+To clean up multistage build artifacts afterwards use
+
+    docker image prune --filter label=stage=tempbuilder
    
 The related metrics can then be found under:
    

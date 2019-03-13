@@ -1,4 +1,5 @@
 FROM golang
+LABEL stage=tempbuilder
 
 WORKDIR /workspace
 
@@ -13,3 +14,4 @@ COPY --from=0 /json_exporter /json_exporter
 COPY --from=0 /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=0 /etc_passwd /etc/passwd
 USER nobody
+
