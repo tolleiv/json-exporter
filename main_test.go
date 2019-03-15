@@ -1,13 +1,13 @@
 package main
 
 import (
-	"testing"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"fmt"
 	"net/url"
-	"io/ioutil"
 	"strings"
+	"testing"
 )
 
 var probeTests = []struct {
@@ -18,7 +18,8 @@ var probeTests = []struct {
 }{
 	{"{\"field\": 23}", "$.field", 200, "value 23"},
 	{"{\"field\": 19}", "$.field", 200, "value 19"},
-	{"{\"field\": 19}", "$.undefined", 404, "Jsonpath not found"},
+	{"{\"field\": 19}", "$.undefined", 404, "jsonpath on execute child 'undefined' not found in JSON object at 3"},
+	{"{\"field.x.y\": 37}", "$[\"field.x.y\"]", 200, "value 37"},
 }
 
 func TestProbeHandler(t *testing.T) {
@@ -44,7 +45,7 @@ func TestProbeHandler(t *testing.T) {
 			t.Error(fmt.Sprintf("HTTP Code mismatch - %d expected %d", resp.StatusCode, tt.out_http_code))
 		}
 
-		if ! strings.Contains(string(body), tt.out_value) {
+		if !strings.Contains(string(body), tt.out_value) {
 			t.Error(fmt.Sprintf("Expected output: %s got\n%s", tt.out_value, string(body)))
 		}
 	}

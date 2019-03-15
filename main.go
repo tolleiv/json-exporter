@@ -1,16 +1,17 @@
 package main
 
 import (
+	"crypto/tls"
+	"encoding/json"
 	"flag"
+	"fmt"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/yalp/jsonpath"
+	"io/ioutil"
 	"log"
 	"net/http"
-
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/prometheus/client_golang/prometheus"
-	"crypto/tls"
-	"github.com/oliveagle/jsonpath"
-	"io/ioutil"
-	"encoding/json"
+	"strconv"
 )
 
 var addr = flag.String("listen-address", ":9116", "The address to listen on for HTTP requests.")
@@ -41,9 +42,9 @@ func probeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	lookuppath := params.Get("jsonpath")
-	if target == "" {
-		http.Error(w, "The JsonPath to lookup", 400)
-		return
+	if lookuppath == "" {
+		lookuppath = "$[\"oracle.cloudstorage.galaxy.mds.health.MdsRdbHealthCheck\"][\"ossstore.1.$CONFIG_SHARDS$.$DEFAULT_SHARD$\"][\"borrowedConnections\"]"
+		log.Printf("setting jsonpath to default %s ", lookuppath)
 	}
 	probeSuccessGauge := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "probe_success",
@@ -55,8 +56,8 @@ func probeHandler(w http.ResponseWriter, r *http.Request) {
 	})
 	valueGauge := prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name:	"value",
-			Help:	"Retrieved value",
+			Name: "value",
+			Help: "Retrieved value",
 		},
 	)
 	registry := prometheus.NewRegistry()
@@ -68,7 +69,12 @@ func probeHandler(w http.ResponseWriter, r *http.Request) {
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	client := &http.Client{Transport: tr}
-	resp, err := client.Get(target)
+	reqwithheader, err := http.NewRequest("GET", target, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	reqwithheader.Header.Set("Accept", "application/json")
+	resp, err := client.Do(reqwithheader)
 	if err != nil {
 		log.Fatal(err)
 
@@ -80,18 +86,33 @@ func probeHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		var json_data interface{}
-		json.Unmarshal([]byte(bytes), &json_data)
-		res, err := jsonpath.JsonPathLookup(json_data, lookuppath)
+		var json_data map[string]interface{}
+		if err := json.Unmarshal(bytes, &json_data); err != nil {
+			fmt.Printf("while unmarshalling %v", bytes)
+			panic(err)
+		}
+		Filter, err := jsonpath.Prepare(lookuppath)
 		if err != nil {
-			http.Error(w, "Jsonpath not found", http.StatusNotFound)
+			jpe := fmt.Sprintf("jsonpath Prepare %v", err)
+			http.Error(w, jpe, http.StatusNotFound)
 			return
 		}
-		log.Printf("Found value %v", res)
-		number, ok := res.(float64)
-		if !ok {
-			http.Error(w, "Values could not be parsed to Float64", http.StatusInternalServerError)
+		out, err := Filter(json_data)
+		if err != nil {
+			fmt.Printf("%v", json_data)
+			jpe := fmt.Sprintf("jsonpath on execute %v", err)
+			http.Error(w, jpe, http.StatusNotFound)
 			return
+		}
+		log.Printf("Found value %v", out)
+		number, ok := out.(float64)
+		if !ok {
+			strout, _ := out.(string)
+			number, err = strconv.ParseFloat(strout, 64)
+			if err != nil {
+				http.Error(w, "Values could not be parsed to Float64", http.StatusInternalServerError)
+				return
+			}
 		}
 		probeSuccessGauge.Set(1)
 		valueGauge.Set(number)
