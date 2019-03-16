@@ -88,18 +88,18 @@ func probeHandler(w http.ResponseWriter, r *http.Request) {
 
 		var json_data map[string]interface{}
 		if err := json.Unmarshal(bytes, &json_data); err != nil {
-			fmt.Printf("while unmarshalling %v", bytes)
-			panic(err)
+			jpe := fmt.Sprintf("Unmarshall %v", err)
+			http.Error(w, jpe, http.StatusInternalServerError)
+			return
 		}
 		Filter, err := jsonpath.Prepare(lookuppath)
 		if err != nil {
 			jpe := fmt.Sprintf("jsonpath Prepare %v", err)
-			http.Error(w, jpe, http.StatusNotFound)
+			http.Error(w, jpe, http.StatusInternalServerError)
 			return
 		}
 		out, err := Filter(json_data)
 		if err != nil {
-			fmt.Printf("%v", json_data)
 			jpe := fmt.Sprintf("jsonpath on execute %v", err)
 			http.Error(w, jpe, http.StatusNotFound)
 			return
