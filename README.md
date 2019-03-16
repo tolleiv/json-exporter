@@ -8,7 +8,7 @@ Which value to pick is defined through JsonPath.
 ## Parameters
 
  - `target`: URL / Json-file to download
- - `jsonpath`: the field name to read the value from, this follows the syntax provided by [oliveagle/jsonpath](https://github.com/oliveagle/jsonpath)
+ - `jsonpath`: the field name to read the value from uses [yalp/jsonpath](https://godoc.org/github.com/yalp/jsonpath)
 
 ## Docker usage
 
