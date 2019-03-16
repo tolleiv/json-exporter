@@ -8,12 +8,16 @@ Which value to pick is defined through JsonPath.
 ## Parameters
 
  - `target`: URL / Json-file to download
- - `jsonpath`: the field name to read the value from, this follows the syntax provided by [oliveagle/jsonpath](https://github.com/oliveagle/jsonpath)
+ - `jsonpath`: the field name to read the value from uses [yalp/jsonpath](https://godoc.org/github.com/yalp/jsonpath)
 
 ## Docker usage
 
     docker build -t json_exporter .
-    docker -d -p 9116:9116 --name json_exporter json_exporter
+    docker run -p 9116:9116 -d json_exporter /json_exporter
+
+To clean up multistage build artifacts afterwards use
+
+    docker image prune --filter label=stage=tempbuilder
    
 The related metrics can then be found under:
    
